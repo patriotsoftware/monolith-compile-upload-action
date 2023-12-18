@@ -98,7 +98,7 @@ runs:
       with:
         aws-access-key-id: ${{ inputs.aws_access_key }}
         aws-secret-access-key: ${{ inputs.aws_secret_key }}
-        aws-region: inputs.aws_region
+        aws-region: ${{ inputs.aws_region }}
         
     - name: Dev Artifact Upload Zip
       shell: powershell
