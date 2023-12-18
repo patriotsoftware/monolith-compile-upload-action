@@ -48,10 +48,12 @@ runs:
         }
         "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
   
-    - name: Copy NuGet
+    - name: Copy NuGet 
+      shell: bash
       run: aws s3 cp s3://dev-ci-nuget-config/NuGet.Config "C:\Program Files (x86)\NuGet\Config\NuGet.config"
 
-    - name: Restore nuget packages
+    - name: Restore nuget packages 
+      shell: bash
       run: nuget restore C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln
       
     - name: Build and analyze
@@ -63,12 +65,14 @@ runs:
         msbuild C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks"
         mv "$bin_dir\_PublishedWebsites" "$base_dir\PublishedWebsites"
         
-    - name: Copy abcpdf8-32
+    - name: Copy abcpdf8-32 
+      shell: powershell
       run: |
         Get-ChildItem -Path artifacts -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object FullName
         .\build2.bat copy_extra_assemblies
 
-    - name: Precompile websites
+    - name: Precompile websites 
+      shell: powershell
       run: |           
         Import-Module '.\build\tools\psake\psake.psm1'
         $psake.use_exit_on_error = $true
