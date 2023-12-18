@@ -49,11 +49,11 @@ runs:
         "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
   
     - name: Copy NuGet 
-      shell: bash
+      shell: powershell
       run: aws s3 cp s3://dev-ci-nuget-config/NuGet.Config "C:\Program Files (x86)\NuGet\Config\NuGet.config"
 
     - name: Restore nuget packages 
-      shell: bash
+      shell: powershell
       run: nuget restore C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln
       
     - name: Build and analyze
