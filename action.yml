@@ -1,2 +1,113 @@
-name: 'Monolith Compile and Deploy'
-description: 'Monolith Compile and Deploy action'
+name: 'Monolith Compile and Upload'
+description: 'Monolith Compile and Upload action'
+
+inputs:
+  github_ref_name:
+    description: 'GitHub ref_name property'
+    required: true
+  github_sha:
+    description: 'GitHub sha property'
+    required: true
+  custom_access_token:
+    description: 'AWS Custom GitHub Access Token'
+    required: true
+  aws_access_key:
+    description: 'AWS Access Key (Required if no aws-actions/configure-aws-credentials)'
+    required: true
+  aws_secret_key:
+    description: 'AWS Secret Key (Required if no aws-actions/configure-aws-credentials)'
+    required: true
+  aws_region:
+    description: 'AWS Region'
+    required: false
+    default: 'us-east-1'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Monolith Code
+      uses: actions/checkout@v4
+      with:
+        # Disabling shallow clone is recommended for improving relevancy of sonarqube reporting
+        fetch-depth: 1     
+
+    - name: Java Install
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Extract branch name
+      id: extract_branch
+      shell: powershell
+      run: |
+        $branch = "${{ inputs.github_ref_name }}"
+        $clean_branch = $branch.ToLower() -replace '_','' | Out-String
+        if ($branch.Length -gt 38) {
+          $clean_branch = $clean_branch.SubString(0,38)
+        }
+        "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+  
+    - name: Copy NuGet
+      run: aws s3 cp s3://dev-ci-nuget-config/NuGet.Config "C:\Program Files (x86)\NuGet\Config\NuGet.config"
+
+    - name: Restore nuget packages
+      run: nuget restore C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln
+      
+    - name: Build and analyze
+      shell: powershell
+      run: |
+        $base_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\artifacts"
+        $bin_dir = "$base_dir\bin"	
+        mkdir $bin_dir
+        msbuild C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks"
+        mv "$bin_dir\_PublishedWebsites" "$base_dir\PublishedWebsites"
+        
+    - name: Copy abcpdf8-32
+      run: |
+        Get-ChildItem -Path artifacts -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object FullName
+        .\build2.bat copy_extra_assemblies
+
+    - name: Precompile websites
+      run: |           
+        Import-Module '.\build\tools\psake\psake.psm1'
+        $psake.use_exit_on_error = $true
+        Invoke-psake .\build\build2.ps1 precompile_websites 
+
+    - name: AwsDeploy Code
+      uses: actions/checkout@v4
+      with:
+        repository: SynergyDataSystems/PatriotSoftware.AwsDeploy
+        token: ${{ inputs.custom_access_token }} 
+        path: .\deploy\appdev
+
+    - name: Combine AwsDeploy with Monolith code
+      shell: powershell
+      run: |
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\deploy"
+        mkdir $work_dir\wwwroot
+        (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"') | Set-Content $work_dir\install_script.ps1
+        Copy-Item -Path c:\actions-runner\_work\Patriotsoftware\Patriotsoftware\artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
+
+    - name: Dev Authenticate
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key }}
+        aws-secret-access-key: ${{ inputs.aws_secret_key }}
+        aws-region: inputs.aws_region
+        
+    - name: Dev Artifact Upload Zip
+      shell: powershell
+      run: |
+        $compress = @{
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
+          CompressionLevel = "Fastest"
+          DestinationPath = "C:\artifacts\tests.zip"
+        }
+        mkdir c:\artifacts
+        $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
+        Compress-Archive @compress
+        if ( $branch -eq "main" -Or $branch -eq "master" ) {
+          $branch = ("${{ inputs.github_sha }}").SubString(0,10)
+        }
+        aws s3 cp "C:\artifacts\tests.zip" s3://monolithdev-codedeploy/$branch.zip
