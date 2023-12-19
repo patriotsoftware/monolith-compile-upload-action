@@ -82,12 +82,13 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: SynergyDataSystems/PatriotSoftware.AwsDeploy
-        token: ${{ inputs.custom_access_token }} 
+        token: ${{ inputs.custom_access_token }}
+        path: .\deploy\appdev
 
     - name: Combine AwsDeploy with Monolith code
       shell: powershell
       run: |
-        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy"
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\deploy"
         mkdir $work_dir\wwwroot
         (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"') | Set-Content $work_dir\install_script.ps1
         Copy-Item -Path c:\actions-runner\_work\Patriotsoftware\Patriotsoftware\artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
