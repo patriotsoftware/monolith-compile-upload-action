@@ -38,7 +38,7 @@ runs:
         fetch-depth: 1     
 
     - name: Java Install
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
         java-version: '17'
@@ -100,7 +100,7 @@ runs:
         Copy-Item -Path c:\actions-runner\_work\Patriotsoftware\Patriotsoftware\artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
 
     - name: Dev Authenticate
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v1-node16
       with:
         aws-access-key-id: ${{ inputs.aws_access_key }}
         aws-secret-access-key: ${{ inputs.aws_secret_key }}
