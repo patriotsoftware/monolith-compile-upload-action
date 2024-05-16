@@ -38,7 +38,7 @@ runs:
         fetch-depth: 1     
 
     - name: Java Install
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '17'
@@ -56,7 +56,7 @@ runs:
     
     - name: Restore nuget packages 
       shell: powershell
-      run: nuget restore C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln
+      run: nuget restore src\PatriotSoftware.sln -Verbosity quiet
       
     - name: Build and analyze
       shell: powershell
@@ -64,7 +64,7 @@ runs:
         $base_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\artifacts"
         $bin_dir = "$base_dir\bin"	
         mkdir $bin_dir
-        msbuild C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks"
+        msbuild src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks"
         mv "$bin_dir\_PublishedWebsites" "$base_dir\PublishedWebsites"
         
     - name: Copy abcpdf8-32 
@@ -89,25 +89,28 @@ runs:
 
     - name: Extract branch name
       id: extract_branch
-      shell: powershell
+      env:
+        branch: ${{ inputs.github_ref_name }}    
       run: |
-        $branch = "${{ inputs.github_ref_name }}"
-        $clean_branch = $branch.ToLower() -replace '_','' | Out-String
-        if ($branch.Length -gt 38) {
-          $clean_branch = $clean_branch.SubString(0,38)
-        }
-        "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        clean_branch=$(echo "$branch" | sed "s/_//g" | tr "[:upper:]" "[:lower:]" | cut -c -38)
+
+        echo "clean-branch=$clean_branch" >> $GITHUB_OUTPUT
+      shell: powershell
 
     - name: Combine AwsDeploy with Monolith code
-      shell: powershell
+      env:
+        dev_folder_name: ${{ steps.extract_branch.outputs.clean-branch }}
       run: |
         $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\deploy"
         mkdir $work_dir\wwwroot
-        (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"') | Set-Content $work_dir\install_script.ps1
-        Copy-Item -Path c:\actions-runner\_work\Patriotsoftware\Patriotsoftware\artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
-        
-    - name: Dev Artifact Upload Zip
-      shell: powershell
+        (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1
+        Copy-Item -Path artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
+      shell: powershell  
+
+    - name: Zip Artifact
+      id: artifact
+      env:
+        branch: ${{ steps.extract_branch.outputs.clean-branch }}
       run: |
         $compress = @{
           Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
@@ -115,16 +118,24 @@ runs:
           DestinationPath = "C:\artifacts\tests.zip"
         }
         mkdir c:\artifacts
-        $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
         Compress-Archive @compress
         if ( $branch -eq "main" -Or $branch -eq "master" ) {
           echo "Main branch, using github sha 10-digits"
           $branch = ("${{ inputs.github_sha }}").SubString(0,10)
         }
+
+        echo "filename=$branch" >> $GITHUB_OUTPUT
+      shell: powershell
+
+    - name: Upload Artifact Zip to Dev      
+      env:
+        filename: ${{ steps.artifact.outputs.filename }}
+      run: |
         awsPath="${{ inputs.s3_bucket }}"
         if ( ("${{ inputs.s3_folder }}").Length -gt 0 ) {
           echo "Using s3 folder provided"
           $awsPath+="/${{ inputs.s3_folder }}"
         }
         echo "Copying to s3://$awsPath/$branch.zip"
-        # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$branch.zip
+        # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$filename.zip
+      shell: powershell
