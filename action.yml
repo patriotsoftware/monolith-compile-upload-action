@@ -8,6 +8,12 @@ inputs:
   github_sha:
     description: 'GitHub sha property'
     required: true
+  s3_bucket:
+    description: 'S3 Bucket name'
+    required: true
+  s3_folder:
+    description: 'S3 Folder name. Optional'
+    required: false
   custom_access_token:
     description: 'AWS Custom GitHub Access Token'
     required: true
@@ -94,7 +100,7 @@ runs:
         Copy-Item -Path c:\actions-runner\_work\Patriotsoftware\Patriotsoftware\artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
 
     - name: Dev Authenticate
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ inputs.aws_access_key }}
         aws-secret-access-key: ${{ inputs.aws_secret_key }}
@@ -112,6 +118,13 @@ runs:
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
         Compress-Archive @compress
         if ( $branch -eq "main" -Or $branch -eq "master" ) {
+          echo "Main branch, using github sha 10-digits"
           $branch = ("${{ inputs.github_sha }}").SubString(0,10)
         }
-        aws s3 cp "C:\artifacts\tests.zip" s3://monolithdev-codedeploy/$branch.zip
+        awsPath="${{ inputs.s3_bucket }}"
+        if ( ("${{ inputs.s3_folder }}").Length -gt 0 ) {
+          echo "Using s3 folder provided"
+          $awsPath+="/${{ inputs.s3_folder }}"
+        }
+        echo "Copying to s3://$awsPath/$branch.zip"
+        # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$branch.zip
