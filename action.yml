@@ -135,10 +135,11 @@ runs:
         s3folder: ${{ inputs.s3_folder }}
       run: |
         $awsPath=$s3bucket
+        echo "Bucket:$s3bucket Folder:$s3folder"
         if ([string]::IsNullOrEmpty($s3folder)) {
           echo "Using s3 folder provided"
           $awsPath += "/" + $s3folder
         }
-        echo "Copying to s3://$awsPath/$branch.zip"
+        echo "Copying to s3://$awsPath/$filename.zip"
         # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$filename.zip
       shell: powershell
