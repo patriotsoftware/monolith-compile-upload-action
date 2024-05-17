@@ -134,7 +134,7 @@ runs:
         s3bucket: ${{ inputs.s3_bucket }}
         s3folder: ${{ inputs.s3_folder }}
       run: |
-        awsPath=$s3bucket
+        $awsPath=$s3bucket
         if ([string]::IsNullOrEmpty($s3folder)) {
           echo "Using s3 folder provided"
           $awsPath += "/" + $s3folder
