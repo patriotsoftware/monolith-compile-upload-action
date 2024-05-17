@@ -130,11 +130,13 @@ runs:
     - name: Upload Artifact Zip to Dev      
       env:
         filename: ${{ steps.artifact.outputs.filename }}
+        s3bucket: ${{ inputs.s3_bucket }}
+        s3folder: ${{ inputs.s3_folder }}
       run: |
-        awsPath="${{ inputs.s3_bucket }}"
-        if ( ("${{ inputs.s3_folder }}").Length -gt 0 ) {
+        awsPath="$s3bucket"
+        if ([string]::IsNullOrEmpty($s3folder)) {
           echo "Using s3 folder provided"
-          $awsPath+="/${{ inputs.s3_folder }}"
+          $awsPath+="/$s3folder"
         }
         echo "Copying to s3://$awsPath/$branch.zip"
         # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$filename.zip
