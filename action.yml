@@ -88,15 +88,15 @@ runs:
     #     path: .\deploy\appdev
 
     - name: Extract branch name
-      id: extract_branch    
-      run: |
-        export UNESCAPED_BRANCH_NAME=${{ inputs.github_ref_name }}
-      
-        branch=$(echo "$UNESCAPED_BRANCH_NAME" | sed "s%refs\/heads\/%%g")
-        clean_branch=$(echo "$branch" | sed "s/_//g" | tr "[:upper:]" "[:lower:]" | cut -c -38)
-
-        echo "clean-branch=$clean_branch" >> $GITHUB_OUTPUT
+      id: extract_branch
       shell: powershell
+      run: |
+        $branch = "${{ inputs.github_ref_name }}"
+        $clean_branch = $branch.ToLower() -replace '_','' | Out-String
+        if ($branch.Length -gt 38) {
+          $clean_branch = $clean_branch.SubString(0,38)
+        }
+        "clean-branch=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
     # - name: Combine AwsDeploy with Monolith code
     #   env:
