@@ -90,8 +90,9 @@ runs:
     - name: Extract branch name
       id: extract_branch
       shell: powershell
+      env:
+        branch: "${{ inputs.github_ref_name }}"
       run: |
-        $branch = "${{ inputs.github_ref_name }}"
         $clean_branch = $branch.ToLower() -replace '_','' | Out-String
         if ($branch.Length -gt 38) {
           $clean_branch = $clean_branch.SubString(0,38)
@@ -111,7 +112,7 @@ runs:
     - name: Zip Artifact
       id: artifact
       env:
-        branch: ${{ steps.extract_branch.outputs.clean-branch }}
+        branch: "${{ steps.extract_branch.outputs.clean-branch }}"
       run: |
         # $compress = @{
         #   Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
@@ -130,9 +131,9 @@ runs:
 
     - name: Upload Artifact Zip to Dev      
       env:
-        filename: ${{ steps.artifact.outputs.filename }}
-        s3bucket: ${{ inputs.s3_bucket }}
-        s3folder: ${{ inputs.s3_folder }}
+        filename: "${{ steps.artifact.outputs.filename }}"
+        s3bucket: "${{ inputs.s3_bucket }}"
+        s3folder: "${{ inputs.s3_folder }}"
       run: |
         $awsPath=$s3bucket
         echo "Bucket:$s3bucket Folder:$s3folder"
