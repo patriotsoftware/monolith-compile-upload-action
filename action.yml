@@ -90,7 +90,10 @@ runs:
     - name: Extract branch name
       id: extract_branch    
       run: |
-        clean_branch=$(echo "${{ inputs.github_ref_name }}" | sed "s/_//g" | tr "[:upper:]" "[:lower:]" | cut -c -38)
+        export UNESCAPED_BRANCH_NAME=${{ inputs.github_ref_name }}
+      
+        branch=$(echo "$UNESCAPED_BRANCH_NAME" | sed "s%refs\/heads\/%%g")
+        clean_branch=$(echo "$branch" | sed "s/_//g" | tr "[:upper:]" "[:lower:]" | cut -c -38)
 
         echo "clean-branch=$clean_branch" >> $GITHUB_OUTPUT
       shell: powershell
