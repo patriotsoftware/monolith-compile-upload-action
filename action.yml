@@ -127,11 +127,7 @@ runs:
         echo "filename=$branch" >> $GITHUB_OUTPUT
       shell: powershell
 
-    - name: Upload Artifact Zip to Dev      
-      env:
-        filename: "${{ steps.artifact.outputs.filename }}"
-        s3bucket: "${{ inputs.s3_bucket }}"
-        s3folder: "${{ inputs.s3_folder }}"
+    - name: Upload Artifact Zip to Dev   
       run: |
         $awsPath=${{ inputs.s3_bucket }}
         $s3folder=${{ inputs.s3_folder }}
