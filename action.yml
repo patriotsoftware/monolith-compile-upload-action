@@ -124,6 +124,8 @@ runs:
           $branch = ("${{ inputs.github_sha }}").SubString(0,10)
         }
 
+        $substring_branch = ("${{ inputs.github_sha }}").SubString(0,10)
+        echo "$substring_branch"
         echo "filename=$branch" >> $GITHUB_OUTPUT
       shell: powershell
 
