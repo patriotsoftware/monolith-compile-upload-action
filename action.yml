@@ -111,7 +111,7 @@ runs:
     - name: Zip Artifact
       id: artifact
       run: |
-        $branch = ${{ steps.extract_branch.outputs.clean-branch }}
+        $branch = "${{ steps.extract_branch.outputs.clean-branch }}"
         # $compress = @{
         #   Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
         #   CompressionLevel = "Fastest"
@@ -131,9 +131,9 @@ runs:
 
     - name: Upload Artifact Zip to Dev   
       run: |
-        $awsPath=${{ inputs.s3_bucket }}
-        $s3folder=${{ inputs.s3_folder }}
-        $filename=${{ steps.artifact.outputs.filename }}
+        $awsPath = "${{ inputs.s3_bucket }}"
+        $s3folder = "${{ inputs.s3_folder }}"
+        $filename = "${{ steps.artifact.outputs.filename }}"
 
         echo "Bucket:$s3bucket Folder:$s3folder"
         if ([string]::IsNullOrEmpty($s3folder)) {
