@@ -44,7 +44,7 @@ runs:
         java-version: '17'
       
     - name: Dev Authenticate
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ inputs.aws_access_key }}
         aws-secret-access-key: ${{ inputs.aws_secret_key }}
@@ -88,11 +88,9 @@ runs:
     #     path: .\deploy\appdev
 
     - name: Extract branch name
-      id: extract_branch
-      env:
-        branch: ${{ inputs.github_ref_name }}    
+      id: extract_branch    
       run: |
-        clean_branch=$(echo "$branch" | sed "s/_//g" | tr "[:upper:]" "[:lower:]" | cut -c -38)
+        clean_branch=$(echo "${{ inputs.github_ref_name }}" | sed "s/_//g" | tr "[:upper:]" "[:lower:]" | cut -c -38)
 
         echo "clean-branch=$clean_branch" >> $GITHUB_OUTPUT
       shell: powershell
