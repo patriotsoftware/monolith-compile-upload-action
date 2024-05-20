@@ -112,6 +112,9 @@ runs:
       id: artifact
       run: |
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
+        $sha = "${{ inputs.github_sha }}"
+        echo "Branch: $branch"
+        echo ""
         # $compress = @{
         #   Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
         #   CompressionLevel = "Fastest"
@@ -121,11 +124,11 @@ runs:
         # Compress-Archive @compress
         if ( $branch -eq "main" -Or $branch -eq "master" ) {
           echo "Main branch, using github sha 10-digits"
-          $branch = ("${{ inputs.github_sha }}").SubString(0,10)
+          $branch = ($sha).SubString(0,10)
         }
 
         $substring_branch = ("${{ inputs.github_sha }}").SubString(0,10)
-        echo "$substring_branch"
+        echo "Substring Branch: $substring_branch"
         echo "filename=$branch" >> $GITHUB_OUTPUT
       shell: powershell
 
