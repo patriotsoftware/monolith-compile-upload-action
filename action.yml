@@ -114,13 +114,13 @@ runs:
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
         $sha = "${{ inputs.github_sha }}"
 
-        # $compress = @{
-        #   Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
-        #   CompressionLevel = "Fastest"
-        #   DestinationPath = "C:\artifacts\tests.zip"
-        # }
-        # mkdir c:\artifacts
-        # Compress-Archive @compress
+        $compress = @{
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
+          CompressionLevel = "Fastest"
+          DestinationPath = "C:\artifacts\tests.zip"
+        }
+        mkdir c:\artifacts
+        Compress-Archive @compress
         if ( $branch -eq "main" -Or $branch -eq "master" ) {
           echo "Main branch, using github sha 10-digits"
           $branch = ("${{ inputs.github_sha }}").SubString(0,10)
@@ -142,5 +142,5 @@ runs:
           $awsPath += "/" + $s3folder
         }
         echo "Copying to s3://$awsPath/${filename}.zip"
-        # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$filename.zip
+        aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$filename.zip
       shell: powershell
