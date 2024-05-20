@@ -91,7 +91,7 @@ runs:
       id: extract_branch
       shell: powershell
       run: |
-        $branch = ${{ inputs.github_ref_name }}
+        $branch = "${{ inputs.github_ref_name }}"
         $clean_branch = $branch.ToLower() -replace '_','' | Out-String
         if ($branch.Length -gt 38) {
           $clean_branch = $clean_branch.SubString(0,38)
