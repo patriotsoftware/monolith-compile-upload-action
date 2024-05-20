@@ -129,7 +129,7 @@ runs:
 
         $substring_branch = ("${{ inputs.github_sha }}").SubString(0,10)
         echo "Substring Branch: $substring_branch"
-        echo "filename=$branch" >> $GITHUB_OUTPUT
+        "filename=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
       shell: powershell
 
     - name: Upload Artifact Zip to Dev   
