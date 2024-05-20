@@ -114,7 +114,7 @@ runs:
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
         $sha = "${{ inputs.github_sha }}"
         echo "Branch: $branch"
-        echo ""
+        echo "Sha: $sha"
         # $compress = @{
         #   Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
         #   CompressionLevel = "Fastest"
