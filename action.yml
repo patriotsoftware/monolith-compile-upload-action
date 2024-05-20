@@ -140,6 +140,6 @@ runs:
           echo "Using s3 folder provided"
           $awsPath += "/" + $s3folder
         }
-        echo "Copying to s3://$awsPath/$filename.zip"
+        echo "Copying to s3://$awsPath/${filename}.zip"
         # aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/$filename.zip
       shell: powershell
