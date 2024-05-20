@@ -139,6 +139,7 @@ runs:
         $filename = "${{ steps.artifact.outputs.filename }}"
 
         echo "Bucket:$s3bucket Folder:$s3folder"
+        echo "Filename: $filename"
         if ([string]::IsNullOrEmpty($s3folder)) {
           echo "Using s3 folder provided"
           $awsPath += "/" + $s3folder
