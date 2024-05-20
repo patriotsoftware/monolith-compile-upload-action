@@ -137,7 +137,7 @@ runs:
 
         echo "Bucket:$s3bucket Folder:$s3folder"
         echo "Filename: $filename"
-        if ([string]::IsNullOrEmpty($s3folder)) {
+        if ([string]::IsNullOrEmpty($s3folder) == false) {
           echo "Using s3 folder provided"
           $awsPath += "/" + $s3folder
         }
