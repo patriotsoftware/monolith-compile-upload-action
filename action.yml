@@ -129,7 +129,7 @@ runs:
       shell: powershell
       run: |
         echo "TEMP DIRECTORY LISTING"
-        Get-ChildItem -Path . –Recurse
+        Get-ChildItem -Path . -Recurse
 
     - name: Extract branch name
       id: extract_branch
@@ -144,10 +144,9 @@ runs:
 
     - name: Combine AwsDeploy with Monolith code
       id: aws-work
-      env:
-        dev_folder_name: ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
-        deploy_folder: ${{ steps.app.outputs.deploy_folder }}
       run: |
+        $dev_folder_name = ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
+        $deploy_folder = ${{ steps.app.outputs.deploy_folder }}
         echo "Deploy folder: $deploy_folder"
         
         $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\signup\deploy"
@@ -166,10 +165,10 @@ runs:
 #  Set-Content "$($_.FullName)"}
 
     - name: Copy Compiled Folder(s)
-      env:
-        compiled_folder: ${{ steps.app.outputs.compiled_folder }}
-        work_dir: ${{ steps.aws-work.outputs.work_dir }}
       run: |
+        $compiled_folder = ${{ steps.app.outputs.compiled_folder }}
+        $work_dir = ${{ steps.aws-work.outputs.work_dir }}
+
         echo "Using PatriotSoftware.$compiled_folder.Compiled"
         Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.Signup.Suite.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
@@ -201,11 +200,10 @@ runs:
       shell: powershell
 
     - name: Upload Artifact Zip to Dev
-      env:
-        deploy_folder: ${{ steps.app.outputs.deploy_folder }}   
       run: |        
         $filename = "${{ steps.filename.outputs.name }}"
         $aws_path = "${{ steps.aws_path.outputs.path }}"
+        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"" 
 
         echo "Directory listing..."
         Get-ChildItem -Path . –Recurse
