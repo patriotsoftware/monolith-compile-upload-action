@@ -120,7 +120,7 @@ runs:
       shell: powershell
       run: |
         echo "TEMP DIRECTORY LISTING"
-        ls
+        Get-ChildItem -Path . –Recurse
 
     - name: Extract branch name
       id: extract_branch
@@ -139,7 +139,12 @@ runs:
         dev_folder_name: ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
         deploy_folder: ${{ steps.app.outputs.deploy_folder }}
       run: |
-        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\${deploy_folder}\deploy"
+        echo "Deploy folder: $deploy_folder"
+        
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\signup\deploy"
+      
+        echo "Work dir = $work_dir"
+
         mkdir $work_dir\wwwroot
         (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1    
 
@@ -151,7 +156,7 @@ runs:
         compiled_folder: ${{ steps.app.outputs.compiled_folder }}
         work_dir: ${{ steps.aws-work.outputs.work_dir }}
       run: |
-        echo "Using PatriotSoftware.${compiled_folder}.Compiled"
+        echo "Using PatriotSoftware.$compiled_folder.Compiled"
         Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.Signup.Suite.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
 
