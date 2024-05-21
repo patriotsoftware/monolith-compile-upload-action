@@ -43,19 +43,19 @@ runs:
         {
             "care" {
               $compiled_folder = "Care"
-              $deploy_folder = ".\deploy\care"
+              $deploy_folder = "care"
             }
             "eapi" {
               $compiled_folder = "External.Api"
-              $deploy_folder = ".\deploy\external_api"
+              $deploy_folder = "external_api"
             }
             "signup" {
               $compiled_folder = "Suite.Signup"
-              $deploy_folder = ".\deploy\signup"
+              $deploy_folder = "signup"
             }
             default {
               $compiled_folder="*"
-              $deploy_folder=".\deploy\appdev"
+              $deploy_folder="appdev"
             }
         }
 
@@ -111,13 +111,16 @@ runs:
       run: .\build2.bat transform_all_configs
 
     - name: AwsDeploy Code
-      uses: actions/checkout@v4
-      env:
-        deploy_folder: "${{ steps.app.outputs.deploy_folder }}"
+      uses: actions/checkout@v4      
       with:
         repository: SynergyDataSystems/PatriotSoftware.AwsDeploy
         token: ${{ inputs.custom_access_token }}
-        path: $deploy_folder
+
+    - name: TEMP Directory Listing
+      shell: powershell
+      run: |
+        echo "TEMP DIRECTORY LISTING"
+        ls
 
     - name: Extract branch name
       id: extract_branch
@@ -133,8 +136,9 @@ runs:
     - name: Combine AwsDeploy with Monolith code
       env:
         dev_folder_name: ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
+        deploy_folder: ${{ steps.app.outputs.deploy_folder }}
       run: |
-        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\deploy"
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\$deploy_folder\deploy"
         mkdir $work_dir\wwwroot
         (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1           
       shell: powershell
