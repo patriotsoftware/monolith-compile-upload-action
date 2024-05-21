@@ -14,6 +14,10 @@ inputs:
   s3_folder:
     description: 'S3 Folder name. Optional'
     required: false
+  app_compiled_folder:
+    description: 'Specific application folder: PatriotSoftware.{name}.Compiled'
+    required: false
+    default: '*'
   custom_access_token:
     description: 'AWS Custom GitHub Access Token'
     required: true
@@ -105,7 +109,7 @@ runs:
         $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\deploy"
         mkdir $work_dir\wwwroot
         (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1
-        Copy-Item -Path artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
+        Copy-Item -Path artifacts\PublishedWebsites\${{ inputs.app_compiled_folder }}.Compiled -Destination $work_dir\wwwroot -Recurse    
       shell: powershell  
 
     - name: Zip File Name
