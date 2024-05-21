@@ -28,8 +28,8 @@ S3 Bucket name
 #### 's3_folder'
 S3 Folder path. Optional
 
-#### 'app_compiled_folder' 
-Specific application folder name such as Suite.Signup, Suite, Care, etc. Default is '*'
+#### 'compile_app' 
+Specific app such as care, eapi, signup or default
 
 #### 'aws_access_key' (required)
 Access key for Aws upload.
