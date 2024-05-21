@@ -64,16 +64,14 @@ runs:
         "compiled_folder=$compiled_folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         "deploy_folder=$deploy_folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-        "path=$aws_path" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
     - name: Read back values
       shell: powershell        
       run: |
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
-        $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
+        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
 
         echo "Using PatriotSoftware.$compiled_folder.Compiled"
-        echo "Work directory C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$work_dir\deploy"
+        echo "Work directory C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\deploy"
 
     - name: Monolith Code
       uses: actions/checkout@v4
