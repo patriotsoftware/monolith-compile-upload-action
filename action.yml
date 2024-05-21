@@ -108,11 +108,36 @@ runs:
         Copy-Item -Path artifacts\PublishedWebsites\*.Compiled -Destination $work_dir\wwwroot -Recurse    
       shell: powershell  
 
-    - name: Zip Artifact
-      id: artifact
+    - name: Zip File Name
+      id: filename
       run: |
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
-        $sha = "${{ inputs.github_sha }}"
+                
+        if ( $branch -eq "main" -Or $branch -eq "master" ) {
+          echo "Main branch, using github sha 10-digits"
+          $branch = ("${{ inputs.github_sha }}").SubString(0,10)
+        }
+
+        "name=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+      shell: powershell
+
+    - name: Zip File Path
+      id: aws_path
+      run: |        
+        $aws_path = "${{ inputs.s3_bucket }}"
+        $s3folder = "${{ inputs.s3_folder }}"
+        if (![string]::IsNullOrEmpty($s3folder)) {
+          echo "Using s3 folder provided"
+          $aws_path += "/" + $s3folder
+        }
+
+        "path=$aws_path" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+      shell: powershell
+
+    - name: Upload Artifact Zip to Dev   
+      run: |        
+        $filename = "${{ steps.filename.outputs.name }}"
+        $aws_path = "${{ steps.aws_path.outputs.path }}"
 
         $compress = @{
           Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\*"
@@ -121,26 +146,7 @@ runs:
         }
         mkdir c:\artifacts
         Compress-Archive @compress
-        if ( $branch -eq "main" -Or $branch -eq "master" ) {
-          echo "Main branch, using github sha 10-digits"
-          $branch = ("${{ inputs.github_sha }}").SubString(0,10)
-        }
-
-        "filename=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-      shell: powershell
-
-    - name: Upload Artifact Zip to Dev   
-      run: |
-        $awsPath = "${{ inputs.s3_bucket }}"
-        $s3folder = "${{ inputs.s3_folder }}"
-        $filename = "${{ steps.artifact.outputs.filename }}"
-
-        echo "Bucket:$s3bucket Folder:$s3folder"
-        echo "Filename: $filename"
-        if (![string]::IsNullOrEmpty($s3folder)) {
-          echo "Using s3 folder provided"
-          $awsPath += "/" + $s3folder
-        }
-        echo "Copying to s3://$awsPath/${filename}.zip"
-        aws s3 cp "C:\artifacts\tests.zip" s3://$awsPath/${filename}.zip
+        
+        echo "Copying to s3://$aws_path/${filename}.zip"
+        aws s3 cp "C:\artifacts\tests.zip" s3://$aws_path/$filename.zip
       shell: powershell
