@@ -39,9 +39,6 @@ runs:
       id: app
       shell: powershell
       run: |
-        $compiled_folder="*"
-        $deploy_folder=".\deploy\appdev"
-
         Switch ("${{ inputs.compile_app }}")
         {
             "care" {
@@ -56,9 +53,15 @@ runs:
               $compiled_folder = "Suite.Signup"
               $deploy_folder = ".\deploy\signup"
             }
+            default {
+              $compiled_folder="*"
+              $deploy_folder=".\deploy\appdev"
+            }
         }
 
-        echo "Compiled folder= $compiled_folder Deploy folder= $deploy_folder"
+        echo "Compiled folder = $compiled_folder `
+              Deploy folder = $deploy_folder"
+
         "compiled_folder=$compiled_folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         "deploy_folder=$deploy_folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
@@ -68,13 +71,13 @@ runs:
         # Disabling shallow clone is recommended for improving relevancy of sonarqube reporting
         fetch-depth: 1     
 
-    - name: Java Install
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+    - name: Install VSSetup PowerShell Module
+      shell: pwsh
+      run: |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Install-Module VSSetup -Scope CurrentUser -Force -AllowClobber
       
-    - name: Dev Authenticate
+    - name: Authenticate with Dev
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ inputs.aws_access_key }}
@@ -88,28 +91,21 @@ runs:
     - name: Restore nuget packages 
       shell: powershell
       run: nuget restore src\PatriotSoftware.sln -Verbosity quiet
-      
-    - name: Build and analyze
-      shell: powershell
-      run: |
-        $base_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\artifacts"
-        $bin_dir = "$base_dir\bin"	
-        mkdir $bin_dir
-        msbuild src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks" -verbosity:quiet
-        mv "$bin_dir\_PublishedWebsites" "$base_dir\PublishedWebsites"
-        
+
+    - name: Compile
+      run: .\build2.bat compile
+   
     - name: Copy abcpdf8-32 
       shell: powershell
       run: |
         Get-ChildItem -Path artifacts -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object FullName
         .\build2.bat copy_extra_assemblies
 
-    - name: Precompile websites 
-      shell: powershell
-      run: |           
-        Import-Module '.\build\tools\psake\psake.psm1'
-        $psake.use_exit_on_error = $true
-        Invoke-psake .\build\build2.ps1 precompile_websites 
+    - name: Precompile Websites
+      run: .\build2.bat precompile_websites
+
+    - name: Transform All Configs
+      run: .\build2.bat transform_all_configs
 
     - name: AwsDeploy Code
       uses: actions/checkout@v4
