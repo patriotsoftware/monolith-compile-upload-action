@@ -68,7 +68,7 @@ runs:
         $base_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\artifacts"
         $bin_dir = "$base_dir\bin"	
         mkdir $bin_dir
-        msbuild src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks"
+        msbuild src\PatriotSoftware.sln /m /p:Platform="x64" /t:Rebuild /p:Configuration="Dev" /p:OutDir="$bin_dir" /p:ExeProjectOutputDir="$base_dir\ScheduledTasks" -verbosity:quiet
         mv "$bin_dir\_PublishedWebsites" "$base_dir\PublishedWebsites"
         
     - name: Copy abcpdf8-32 
