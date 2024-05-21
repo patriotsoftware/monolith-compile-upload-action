@@ -134,13 +134,19 @@ runs:
     - name: Combine AwsDeploy with Monolith code
       env:
         dev_folder_name: ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
-        compiled_folder: ${{ steps.app.outputs.compiled_folder }}
       run: |
         $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\appdev\deploy\appdev\deploy"
         mkdir $work_dir\wwwroot
-        (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1
-        Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse    
-      shell: powershell  
+        (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1           
+      shell: powershell
+
+    - name: Copy Compiled Folder(s)
+      env:
+        compiled_folder: ${{ steps.app.outputs.compiled_folder }}
+      run: |
+        echo "Using PatriotSoftware.$compiled_folder.Compiled"
+        Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
+      shell: powershell
 
     - name: Zip File Name
       id: filename
