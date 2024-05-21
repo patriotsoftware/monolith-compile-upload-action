@@ -114,6 +114,7 @@ runs:
       with:
         repository: SynergyDataSystems/PatriotSoftware.AwsDeploy
         token: ${{ inputs.custom_access_token }}
+        path: .\aws
 
     - name: TEMP Directory Listing
       shell: powershell
@@ -138,7 +139,7 @@ runs:
         dev_folder_name: ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
         deploy_folder: ${{ steps.app.outputs.deploy_folder }}
       run: |
-        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\$deploy_folder\deploy"
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\${deploy_folder}\deploy"
         mkdir $work_dir\wwwroot
         (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "$dev_folder_name"') | Set-Content $work_dir\install_script.ps1    
 
@@ -150,7 +151,7 @@ runs:
         compiled_folder: ${{ steps.app.outputs.compiled_folder }}
         work_dir: ${{ steps.aws-work.outputs.work_dir }}
       run: |
-        echo "Using PatriotSoftware.$compiled_folder.Compiled"
+        echo "Using PatriotSoftware.${compiled_folder}.Compiled"
         Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.Signup.Suite.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
 
@@ -187,8 +188,11 @@ runs:
         $filename = "${{ steps.filename.outputs.name }}"
         $aws_path = "${{ steps.aws_path.outputs.path }}"
 
+        echo "Directory listing..."
+        Get-ChildItem -Path . –Recurse
+
         $compress = @{
-          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\deploy\$deploy_folder\*"
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\*"
           CompressionLevel = "Fastest"
           DestinationPath = "C:\artifacts\tests.zip"
         }
