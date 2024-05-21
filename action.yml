@@ -93,6 +93,7 @@ runs:
       run: nuget restore src\PatriotSoftware.sln -Verbosity quiet
 
     - name: Compile
+      shell: powershell
       run: .\build2.bat compile
    
     - name: Copy abcpdf8-32 
@@ -102,9 +103,11 @@ runs:
         .\build2.bat copy_extra_assemblies
 
     - name: Precompile Websites
+      shell: powershell
       run: .\build2.bat precompile_websites
 
     - name: Transform All Configs
+      shell: powershell
       run: .\build2.bat transform_all_configs
 
     - name: AwsDeploy Code
