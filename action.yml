@@ -161,8 +161,8 @@ runs:
 
     - name: Copy Compiled Folder(s)
       run: |
-        $compiled_folder = ${{ steps.app.outputs.compiled_folder }}
-        $work_dir = ${{ steps.aws-work.outputs.work_dir }}
+        $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
+        $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
 
         echo "Using PatriotSoftware.$compiled_folder.Compiled"
         Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.Signup.Suite.Compiled -Destination $work_dir\wwwroot -Recurse
