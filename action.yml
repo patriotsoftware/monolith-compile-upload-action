@@ -152,12 +152,6 @@ runs:
         "work_dir=$work_dir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append       
       shell: powershell
 
-# gci -Recurse -Filter *.csproj |
-# % { (get-content "$($_.FullName)")
-# .Replace('<TargetFramework>net47</TargetFramework>', '<TargetFramework>net462</TargetFramework>') |
-#  Set-Content "$($_.FullName)"}
-
-# //// HERE /////
     - name: Copy Compiled Folder(s)
       run: |
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
