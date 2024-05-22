@@ -198,7 +198,7 @@ runs:
       run: |        
         $filename = "${{ steps.filename.outputs.name }}"
         $aws_path = "${{ steps.aws_path.outputs.path }}"
-        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"" 
+        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
         
         $compress = @{
           Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\signup\*"
