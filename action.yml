@@ -165,7 +165,7 @@ runs:
         $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
 
         echo "Using PatriotSoftware.$compiled_folder.Compiled"
-        Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.Signup.Suite.Compiled -Destination $work_dir\wwwroot -Recurse
+        Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
 
     - name: Zip File Name
