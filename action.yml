@@ -143,8 +143,8 @@ runs:
         $dev_folder_name = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
         echo "Deploy folder: $deploy_folder"
-        
-        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\signup\deploy"
+
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\signup\deploy"
       
         echo "Work dir = $work_dir"
 
@@ -199,9 +199,9 @@ runs:
         $filename = "${{ steps.filename.outputs.name }}"
         $aws_path = "${{ steps.aws_path.outputs.path }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"" 
-
+        
         $compress = @{
-          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\signup\*"
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\signup\*"
           CompressionLevel = "Fastest"
           DestinationPath = "C:\artifacts\tests.zip"
         }
