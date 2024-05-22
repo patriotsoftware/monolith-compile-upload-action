@@ -125,12 +125,6 @@ runs:
         token: ${{ inputs.custom_access_token }}
         path: .\aws
 
-    - name: TEMP Directory Listing
-      shell: powershell
-      run: |
-        echo "TEMP DIRECTORY LISTING"
-        Get-ChildItem -Path . -Recurse
-
     - name: Extract branch name
       id: extract_branch
       shell: powershell
@@ -205,11 +199,8 @@ runs:
         $aws_path = "${{ steps.aws_path.outputs.path }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"" 
 
-        echo "Directory listing..."
-        Get-ChildItem -Path . –Recurse
-
         $compress = @{
-          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\*"
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\signup\*"
           CompressionLevel = "Fastest"
           DestinationPath = "C:\artifacts\tests.zip"
         }
