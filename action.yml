@@ -165,10 +165,16 @@ runs:
       id: filename
       run: |
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
+        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
                 
         if ( $branch -eq "main" -Or $branch -eq "master" ) {
           echo "Main branch, using github sha 10-digits"
           $branch = ("${{ inputs.github_sha }}").SubString(0,10)
+        }
+
+        if ( $deploy_folder -ne "appdev") {
+          echo "Using prefix app on zip file"
+          $branch = "$deploy_folder" + "_" + "$branch"
         }
 
         "name=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
