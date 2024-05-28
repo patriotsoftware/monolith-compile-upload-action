@@ -84,7 +84,7 @@ runs:
       shell: powershell
       run: |
         echo "Determine monolith compile or download existing zip"
-        $compile = ${{ inputs.rebuild }}
+        $compile = "${{ inputs.rebuild }}"
         
         if ($compile -eq "false") {
           
