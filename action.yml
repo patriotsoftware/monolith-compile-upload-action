@@ -97,7 +97,7 @@ runs:
 
           if ($zip -eq $null) {
             echo "File not found, recompile."  
-            $compile = true
+            $compile = "true"
           }
         }
         "compile=$compile" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
