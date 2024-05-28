@@ -86,7 +86,7 @@ runs:
         echo "Determine monolith compile or download existing zip"
         $compile = ${{ inputs.rebuild }}
         
-        if ($compile -eq false) {
+        if ($compile -eq "false") {
           
           $bucketName = "${{ inputs.s3_bucket }}"
           $filePath = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip"
