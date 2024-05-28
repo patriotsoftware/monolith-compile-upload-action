@@ -81,6 +81,7 @@ runs:
 
     - name: Determine Monolith Compile
       id: monolith
+      shell: powershell
       run: |
         echo "Determine monolith compile or download existing zip"
         $compile = ${{ inputs.rebuild }}
@@ -111,6 +112,7 @@ runs:
     - name: Download file form S3
       id: monolith
       if: ${{ steps.monolith.outputs.compile == 'false' }}
+      shell: powershell
       run: |
         echo "Download file from S3"
         $aws_path = "${{ inputs.s3_bucket }}"
