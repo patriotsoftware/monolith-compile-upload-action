@@ -18,6 +18,10 @@ inputs:
     description: 'Specific app such as care, eapi, signup or default'
     required: false
     default: ''
+  rebuild:
+    description: 'Rebuild always. Default true'
+    required: false
+    default: true
   custom_access_token:
     description: 'AWS Custom GitHub Access Token'
     required: true
@@ -64,14 +68,61 @@ runs:
         "compiled_folder=$compiled_folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         "deploy_folder=$deploy_folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-    - name: Read back values
-      shell: powershell        
+    - name: Extract branch name
+      id: extract_branch
+      shell: powershell
       run: |
-        $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
-        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
+        $branch = "${{ inputs.github_ref_name }}"
+        $clean_branch = $branch.ToLower() -replace '_','' | Out-String
+        if ($branch.Length -gt 38) {
+          $clean_branch = $clean_branch.SubString(0,38)
+        }
+        "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-        echo "Using PatriotSoftware.$compiled_folder.Compiled"
-        echo "Work directory C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\deploy"
+    - name: Determine Monolith Compile
+      id: monolith
+      run: |
+        echo "Determine monolith compile or download existing zip"
+        $compile = ${{ inputs.rebuild }}
+        
+        if ($compile -eq false) {
+          
+          $bucketName = "${{ inputs.s3_bucket }}"
+          $filePath = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip"
+
+          echo "Check if file exists on S3 $bucketName $filePath"
+          
+          $zip = Get-S3Object -BucketName $bucketName -Key $filePath
+
+          if ($zip -eq $null) {
+            echo "File not found, recompile."  
+            $compile = true
+          }
+        }
+        "compile=$compile" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+    - name: Authenticate with Dev
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key }}
+        aws-secret-access-key: ${{ inputs.aws_secret_key }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: Download file form S3
+      id: monolith
+      if: ${{ steps.monolith.outputs.compile == 'false' }}
+      run: |
+        echo "Download file from S3"
+        $aws_path = "${{ inputs.s3_bucket }}"
+        $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
+
+        aws s3 cp s3://$aws_path/$branch.zip .\build.zip
+        $progressPreference = 'SilentlyContinue'
+
+    - name: Decompress zip File
+      if: ${{ steps.monolith.outputs.compile == 'false' }}
+      run: Expand-Archive -Path .\build.zip -DestinationPath . -Force
+      shell: powershell     
 
     - name: Monolith Code
       uses: actions/checkout@v4
@@ -84,37 +135,46 @@ runs:
       run: |
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
         Install-Module VSSetup -Scope CurrentUser -Force -AllowClobber
-      
-    - name: Authenticate with Dev
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ inputs.aws_access_key }}
-        aws-secret-access-key: ${{ inputs.aws_secret_key }}
-        aws-region: ${{ inputs.aws_region }}
+
+    - name: Read back values
+      shell: powershell        
+      run: |
+        $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
+        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
+        $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
+
+        echo "Branch $branch is using PatriotSoftware.$compiled_folder.Compiled"
+        echo "Work directory C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\deploy"
   
-    - name: Copy NuGet 
+    - name: Copy NuGet
+      if: ${{ steps.monolith.outputs.compile == 'true' }} 
       shell: powershell
       run: aws s3 cp s3://dev-ci-nuget-config/NuGet.Config "C:\Program Files (x86)\NuGet\Config\NuGet.config"
     
-    - name: Restore nuget packages 
+    - name: Restore nuget packages
+      if: ${{ steps.monolith.outputs.compile == 'true' }} 
       shell: powershell
       run: nuget restore src\PatriotSoftware.sln -Verbosity quiet
 
     - name: Compile
+      if: ${{ steps.monolith.outputs.compile == 'true' }}
       shell: powershell
       run: .\build2.bat compile
    
-    - name: Copy abcpdf8-32 
+    - name: Copy abcpdf8-32
+      if: ${{ steps.monolith.outputs.compile == 'true' }} 
       shell: powershell
       run: |
         Get-ChildItem -Path artifacts -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object FullName
         .\build2.bat copy_extra_assemblies
 
     - name: Precompile Websites
+      if: ${{ steps.monolith.outputs.compile == 'true' }}
       shell: powershell
       run: .\build2.bat precompile_websites
 
     - name: Transform All Configs
+      if: ${{ steps.monolith.outputs.compile == 'true' }}
       shell: powershell
       run: .\build2.bat transform_all_configs
 
@@ -125,24 +185,13 @@ runs:
         token: ${{ inputs.custom_access_token }}
         path: .\aws
 
-    - name: Extract branch name
-      id: extract_branch
-      shell: powershell
-      run: |
-        $branch = "${{ inputs.github_ref_name }}"
-        $clean_branch = $branch.ToLower() -replace '_','' | Out-String
-        if ($branch.Length -gt 38) {
-          $clean_branch = $clean_branch.SubString(0,38)
-        }
-        "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
     - name: Combine AwsDeploy with Monolith code
       id: aws-work
       run: |
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
         echo "Deploy folder: $deploy_folder"
 
-        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\signup\deploy"
+        $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\$deploy_folder\deploy"
       
         echo "Work dir = $work_dir"
 
@@ -152,13 +201,24 @@ runs:
         "work_dir=$work_dir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append       
       shell: powershell
 
-    - name: Copy Compiled Folder(s)
+    - name: Copy Compiled Folder(s) from local
+      if: ${{ steps.monolith.outputs.compile == 'true' }}
       run: |
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
         $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
 
         echo "Using PatriotSoftware.$compiled_folder.Compiled"
         Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
+      shell: powershell
+
+    - name: Copy Compiled Folder(s) from zip
+      if: ${{ steps.monolith.outputs.compile == 'false' }}
+      run: |
+        $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
+        $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
+
+        echo "Using PatriotSoftware.$compiled_folder.Compiled"
+        Copy-Item -Path deploy\wwwroot\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
 
     - name: Zip File Name
@@ -200,7 +260,7 @@ runs:
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
         
         $compress = @{
-          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\signup\*"
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\$deploy_folder\*"
           CompressionLevel = "Fastest"
           DestinationPath = "C:\artifacts\tests.zip"
         }
