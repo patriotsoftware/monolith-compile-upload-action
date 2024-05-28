@@ -109,8 +109,7 @@ runs:
         aws-secret-access-key: ${{ inputs.aws_secret_key }}
         aws-region: ${{ inputs.aws_region }}
 
-    - name: Download file form S3
-      id: monolith
+    - name: Download file form S3      
       if: ${{ steps.monolith.outputs.compile == 'false' }}
       shell: powershell
       run: |
