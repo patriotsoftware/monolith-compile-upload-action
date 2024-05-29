@@ -104,7 +104,7 @@ runs:
           if ($fileExists -like "*404*") {
             echo "File not found, recompile."  
             $compile = "true"
-          } else if ($compiled_folder -eq "*") {
+          } elseif ($compiled_folder -eq "*") {
             exit 0
           }
         }
