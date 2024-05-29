@@ -87,18 +87,15 @@ runs:
         $compile = "${{ inputs.rebuild }}"
         
         if ($compile -eq "false") {
-          
+          Install-Module -Name AWSPowerShell
+          Import-Module AWSPowerShell
+          Get-Module -ListAvailable -Name AWSPowerShell
+
           $bucketName = "${{ inputs.s3_bucket }}"
           $filePath = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip"
 
           echo "Check if file exists on S3 $bucketName $filePath"
-          
-          $exists=aws s3 ls s3://$bucketName/$filePath 2>&1
-          if ($exists -eq $null) {
-            echo "File not found, recompile."  
-            $compile = "true"
-          }
-            
+         
           $zip = Get-S3Object -BucketName $bucketName -Key $filePath
 
           if ($zip -eq $null) {
