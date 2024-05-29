@@ -105,6 +105,7 @@ runs:
             echo "File not found, recompile."  
             $compile = "true"
           } elseif ($compiled_folder -eq "*") {
+            echo "File exists and cannot be overwritten"
             exit 1
           }
         }
