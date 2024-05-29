@@ -78,6 +78,13 @@ runs:
           $clean_branch = $clean_branch.SubString(0,38)
         }
         "CLEAN_BRANCH=$clean_branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        
+    - name: Authenticate with Dev
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key }}
+        aws-secret-access-key: ${{ inputs.aws_secret_key }}
+        aws-region: ${{ inputs.aws_region }}
 
     - name: Determine Monolith Compile
       id: monolith
@@ -99,13 +106,6 @@ runs:
           }
         }
         "compile=$compile" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
-    - name: Authenticate with Dev
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ inputs.aws_access_key }}
-        aws-secret-access-key: ${{ inputs.aws_secret_key }}
-        aws-region: ${{ inputs.aws_region }}
 
     - name: Download file form S3      
       if: ${{ steps.monolith.outputs.compile == 'false' }}
@@ -226,7 +226,12 @@ runs:
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
                 
-        if ( $branch -eq "main" -Or $branch -eq "master" ) {
+        if ( $branch -eq "main" -Or $branch -eq "master" ) {aws : 
+At C:\actions-runner\_work\_temp\77373251-3a97-4c57-b365-218798e4f837.ps1:11 char:17
++ ... ileExists = aws s3api head-object --bucket "monolithdev-codedeploy" - ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
           echo "Main branch, using github sha 10-digits"
           $branch = ("${{ inputs.github_sha }}").SubString(0,10)
         }
