@@ -92,7 +92,7 @@ runs:
 
           echo "Check if file exists on S3 $bucketName $filePath"
          
-          $fileExists = aws s3api head-object --bucket ${{ inputs.s3_bucket }} --key ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip 2>&1
+          $fileExists = aws s3api head-object --bucket "${{ inputs.s3_bucket }}" --key "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip" 2>&1
           if ($fileExists -like "*404*") {
             echo "File not found, recompile."  
             $compile = "true"
