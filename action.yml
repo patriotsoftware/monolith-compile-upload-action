@@ -124,9 +124,7 @@ runs:
 
     - name: Decompress zip File
       if: ${{ steps.monolith.outputs.compile == 'false' }}
-      run: |
-        Expand-Archive -Path .\build.zip -DestinationPath . -Force
-        ls
+      run: Expand-Archive -Path .\build.zip -DestinationPath . -Force
       shell: powershell     
 
     - name: Monolith Code
@@ -151,7 +149,6 @@ runs:
 
         echo "Branch $branch is using PatriotSoftware.$compiled_folder.Compiled"
         echo "Work directory C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\deploy"
-        ls
   
     - name: Copy NuGet
       if: ${{ steps.monolith.outputs.compile == 'true' }} 
@@ -205,8 +202,7 @@ runs:
         mkdir $work_dir\wwwroot
         (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"') | Set-Content $work_dir\install_script.ps1    
 
-        "work_dir=$work_dir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append   
-        ls    
+        "work_dir=$work_dir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
       shell: powershell
 
     - name: Copy Compiled Folder(s) from local
@@ -226,7 +222,6 @@ runs:
         $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
 
         echo "Using PatriotSoftware.$compiled_folder.Compiled"
-        ls
         Copy-Item -Path deploy\wwwroot\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
 
