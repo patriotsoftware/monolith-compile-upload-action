@@ -120,7 +120,9 @@ runs:
 
     - name: Decompress zip File
       if: ${{ steps.monolith.outputs.compile == 'false' }}
-      run: Expand-Archive -Path .\build.zip -DestinationPath . -Force
+      run: |
+        Expand-Archive -Path .\build.zip -DestinationPath . -Force
+        ls
       shell: powershell     
 
     - name: Monolith Code
