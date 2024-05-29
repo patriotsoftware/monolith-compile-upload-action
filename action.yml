@@ -126,6 +126,7 @@ runs:
       shell: powershell     
 
     - name: Monolith Code
+      if: ${{ steps.monolith.outputs.compile == 'true' }} 
       uses: actions/checkout@v4
       with:
         # Disabling shallow clone is recommended for improving relevancy of sonarqube reporting
