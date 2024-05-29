@@ -87,6 +87,15 @@ runs:
         $compile = "${{ inputs.rebuild }}"
         
         if ($compile -eq "false") {
+          Import-Module PowerShellGet
+          Get-ExecutionPolicy
+
+          # If it's Restricted or Undefined, set it to RemoteSigned:
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          
+          # Update the module
+          Install-Module -Name PowerShellGet -Repository PSGallery -Force
+
           Install-Module -Name AWSPowerShell
           Import-Module AWSPowerShell
           Get-Module -ListAvailable -Name AWSPowerShell
