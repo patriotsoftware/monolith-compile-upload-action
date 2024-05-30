@@ -105,9 +105,10 @@ runs:
          
           $fileExists = aws s3api head-object --bucket $bucketName --key $filePath 2>&1
           if ($fileExists -like "*404*") {
-            echo "File not found. Compile."  
-            $sourcePath = "deploy\wwwroot"
+            echo "File not found. Compile."              
             $compile = "true"
+          } else {
+            $sourcePath = "deploy\wwwroot"
           }
         }
         "compile=$compile" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
