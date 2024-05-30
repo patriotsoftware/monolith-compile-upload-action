@@ -25,8 +25,8 @@ Access token for GitHub AwsDeploy repository.
 #### 's3_bucket' (required)
 S3 Bucket name
 
-#### 's3_folder'
-S3 Folder path. Optional
+#### 'rebuild'
+Overwrite existing file. Optional (default true)
 
 #### 'compile_app' 
 Specific app such as care, eapi, signup or default

@@ -11,9 +11,6 @@ inputs:
   s3_bucket:
     description: 'S3 Bucket name'
     required: true
-  s3_folder:
-    description: 'S3 Folder name. Optional'
-    required: false
   compile_app:
     description: 'Specific app such as care, eapi, signup or default'
     required: false
@@ -91,25 +88,30 @@ runs:
       shell: powershell
       run: |
         echo "Determine monolith compile or download existing zip"
-        $compile = "${{ inputs.rebuild }}"
+        $rebuild = "${{ inputs.rebuild }}"
+        $compile = $rebuild
+        $app = "${{ inpits.compile_app }}"
+        $sourcePath = "artifacts\PublishedWebsites"
+
+        if ($app -eq ''){
+          $compile = "true"
+        }
         
         if ($compile -eq "false") {          
           $bucketName = "${{ inputs.s3_bucket }}"
           $filePath = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip"
-          $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
-
+          
           echo "Check if file exists on S3 $bucketName $filePath"
          
-          $fileExists = aws s3api head-object --bucket "${{ inputs.s3_bucket }}" --key "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}.zip" 2>&1
+          $fileExists = aws s3api head-object --bucket $bucketName --key $filePath 2>&1
           if ($fileExists -like "*404*") {
             echo "File not found, recompile."  
+            $sourcePath = "deploy\wwwroot"
             $compile = "true"
-          } elseif ($compiled_folder -eq "*") {
-            echo "File exists and cannot be overwritten"
-            exit 1
           }
         }
         "compile=$compile" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        "source=$sourcePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
     - name: Download file form S3      
       if: ${{ steps.monolith.outputs.compile == 'false' }}
@@ -139,16 +141,6 @@ runs:
       run: |
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
         Install-Module VSSetup -Scope CurrentUser -Force -AllowClobber
-
-    - name: Read back values
-      shell: powershell        
-      run: |
-        $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
-        $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
-        $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
-
-        echo "Branch $branch is using PatriotSoftware.$compiled_folder.Compiled"
-        echo "Work directory C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\$deploy_folder\deploy"
   
     - name: Copy NuGet
       if: ${{ steps.monolith.outputs.compile == 'true' }} 
@@ -205,24 +197,14 @@ runs:
         "work_dir=$work_dir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
       shell: powershell
 
-    - name: Copy Compiled Folder(s) from local
-      if: ${{ steps.monolith.outputs.compile == 'true' }}
+    - name: Copy Compiled Folder(s)
       run: |
+        $source = "${{ steps.monolith.outputs.compile }}"
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
         $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
 
-        echo "Using PatriotSoftware.$compiled_folder.Compiled"
-        Copy-Item -Path artifacts\PublishedWebsites\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
-      shell: powershell
-
-    - name: Copy Compiled Folder(s) from zip
-      if: ${{ steps.monolith.outputs.compile == 'false' }}
-      run: |
-        $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
-        $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
-
-        echo "Using PatriotSoftware.$compiled_folder.Compiled"
-        Copy-Item -Path deploy\wwwroot\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
+        echo "Using PatriotSoftware.$compiled_folder.Compiled from $source"
+        Copy-Item -Path $source\PatriotSoftware.$compiled_folder.Compiled -Destination $work_dir\wwwroot -Recurse
       shell: powershell
 
     - name: Zip File Name
@@ -244,23 +226,10 @@ runs:
         "name=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
       shell: powershell
 
-    - name: Zip File Path
-      id: aws_path
-      run: |        
-        $aws_path = "${{ inputs.s3_bucket }}"
-        $s3folder = "${{ inputs.s3_folder }}"
-        if (![string]::IsNullOrEmpty($s3folder)) {
-          echo "Using s3 folder provided"
-          $aws_path += "/" + $s3folder
-        }
-
-        "path=$aws_path" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-      shell: powershell
-
     - name: Upload Artifact Zip to Dev
       run: |        
         $filename = "${{ steps.filename.outputs.name }}"
-        $aws_path = "${{ steps.aws_path.outputs.path }}"
+        $s3_bucket = "${{ inputs.s3_bucket }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
         
         $compress = @{
@@ -271,6 +240,6 @@ runs:
         mkdir c:\artifacts
         Compress-Archive @compress
         
-        echo "Copying to s3://$aws_path/${filename}.zip"
-        aws s3 cp "C:\artifacts\tests.zip" s3://$aws_path/$filename.zip
+        echo "Copying to s3://$s3_bucket/${filename}.zip"
+        aws s3 cp "C:\artifacts\tests.zip" s3://$s3_bucket/$filename.zip
       shell: powershell
