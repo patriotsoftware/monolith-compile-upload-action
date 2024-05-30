@@ -198,7 +198,7 @@ runs:
 
     - name: Copy Compiled Folder(s)
       run: |
-        $source = "${{ steps.monolith.outputs.compile }}"
+        $source = "${{ steps.monolith.outputs.source }}"
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
         $work_dir = "${{ steps.aws-work.outputs.work_dir }}"
 
