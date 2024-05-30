@@ -90,7 +90,7 @@ runs:
         echo "Determine monolith compile or download existing zip"
         $rebuild = "${{ inputs.rebuild }}"
         $compile = $rebuild
-        $app = "${{ inpits.compile_app }}"
+        $app = "${{ inputs.compile_app }}"
         $sourcePath = "artifacts\PublishedWebsites"
 
         if ($app -eq ''){
