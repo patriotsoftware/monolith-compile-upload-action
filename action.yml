@@ -121,7 +121,7 @@ runs:
         $aws_path = "${{ inputs.s3_bucket }}"
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
 
-        aws s3 cp s3://$aws_path/$branch.zip .\build.zip -quiet
+        aws s3 cp s3://$aws_path/$branch.zip .\build.zip --quiet
         $progressPreference = 'SilentlyContinue'
 
     - name: Decompress zip File
@@ -238,5 +238,5 @@ runs:
         Compress-Archive @compress
         
         echo "Copying to s3://$s3_bucket/${filename}.zip"
-        aws s3 cp "C:\artifacts\work.zip" s3://$s3_bucket/$filename.zip -quiet
+        aws s3 cp "C:\artifacts\work.zip" s3://$s3_bucket/$filename.zip --quiet
       shell: powershell
