@@ -160,9 +160,7 @@ runs:
     - name: Copy abcpdf8-32
       if: ${{ steps.monolith.outputs.compile == 'true' }} 
       shell: powershell
-      run: |
-        Get-ChildItem -Path artifacts -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object FullName
-        .\build2.bat copy_extra_assemblies
+      run: .\build2.bat copy_extra_assemblies
 
     - name: Precompile Websites
       if: ${{ steps.monolith.outputs.compile == 'true' }}
