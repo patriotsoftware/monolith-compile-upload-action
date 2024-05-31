@@ -232,11 +232,11 @@ runs:
         $compress = @{
           Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\$deploy_folder\*"
           CompressionLevel = "Fastest"
-          DestinationPath = "C:\artifacts\tests.zip"
+          DestinationPath = "C:\artifacts\work.zip"
         }
         mkdir c:\artifacts
         Compress-Archive @compress
         
         echo "Copying to s3://$s3_bucket/${filename}.zip"
-        aws s3 cp "C:\artifacts\tests.zip" s3://$s3_bucket/$filename.zip
+        aws s3 cp "C:\artifacts\work.zip" s3://$s3_bucket/$filename.zip
       shell: powershell
