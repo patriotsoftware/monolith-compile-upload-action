@@ -217,7 +217,7 @@ runs:
 
         if ( $deploy_folder -ne "appdev") {
           echo "Using prefix $deploy_folder on zip file"
-          $branch = "${$deploy_folder}_${$branch}"
+          $branch = "$deploy_folder" + "_"+ "$branch"
         }
 
         "name=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
