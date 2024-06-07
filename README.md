@@ -40,6 +40,11 @@ Secret key for Aws upload.
 #### 'aws_region' (optional)
 Aws region used. Default is 'us-east-1'.
 
+## Outputs
+
+#### 'filename' 
+Zip filename resulting from compile
+
 ## Sample Use
 
 ```
