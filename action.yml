@@ -36,7 +36,7 @@ inputs:
 outputs:
   filename: 
     description: 'Output zip file name uploaded'
-    value: ${{ steps.zip.outputs.filename }}
+    value: "${{ steps.filename.outputs.name }}.zip"
 
 runs:
   using: 'composite'
@@ -232,7 +232,6 @@ runs:
       shell: powershell
 
     - name: Upload Artifact Zip to Dev
-      id: zip
       run: |        
         $filename = "${{ steps.filename.outputs.name }}"
         $s3_bucket = "${{ inputs.s3_bucket }}"
@@ -248,6 +247,4 @@ runs:
         
         echo "Copying to s3://$s3_bucket/${filename}.zip"
         aws s3 cp "C:\artifacts\work.zip" s3://$s3_bucket/$filename.zip --quiet
-
-        "filename=$filename.zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
       shell: powershell
