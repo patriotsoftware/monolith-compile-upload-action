@@ -34,8 +34,8 @@ inputs:
     default: 'us-east-1'
 
 outputs:
-  zip-filename: 'zip file name'
-    description: 'Output zip file name uploaded.'
+  zip-filename: 
+    description: 'Output zip file name uploaded'
     value: ${{ steps.zip.outputs.filename }}
 
 runs:
