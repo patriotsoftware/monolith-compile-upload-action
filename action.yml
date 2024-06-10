@@ -34,9 +34,9 @@ inputs:
     default: 'us-east-1'
 
 outputs:
-  zip_filename: 
+  zip-filename: 
     description: 'Output zip file name uploaded'
-    value: ${{ steps.zip_filename.outputs.name }}
+    value: ${{ steps.zip.outputs.name }}
 
 runs:
   using: 'composite'
@@ -250,7 +250,7 @@ runs:
       shell: powershell
 
     - name: Zip file name
-      id: zip_filename
+      id: zip
       shell: powershell
       run: |
         $filename = "${{ steps.filename.outputs.name }}.zip"
