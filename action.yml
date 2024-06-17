@@ -45,11 +45,11 @@ runs:
       id: app
       shell: powershell
       run: |
-        Switch ("${{ inputs.compile_app }}")
+        $deploy_folder = "${{ inputs.compile_app }}"
+        Switch ($deploy_folder)
         {
             "care" {
               $compiled_folder = "Care"
-              $deploy_folder = "care"
             }
             "eapi" {
               $compiled_folder = "External.Api"
@@ -57,7 +57,9 @@ runs:
             }
             "signup" {
               $compiled_folder = "Suite.Signup"
-              $deploy_folder = "signup"
+            }
+            "suite" {
+              $compiled_folder = "MyPatriot.Compiled"
             }
             default {
               $compiled_folder="*"
