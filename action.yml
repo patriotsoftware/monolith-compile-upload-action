@@ -62,7 +62,7 @@ runs:
               $compiled_folder = "Suite.Signup"
             }
             "suite" {
-              $compiled_folder = "MyPatriot.Compiled"
+              $compiled_folder = "MyPatriot"
             }
             default {
               $compiled_folder="*"
