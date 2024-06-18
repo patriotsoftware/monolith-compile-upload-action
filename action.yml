@@ -37,6 +37,9 @@ outputs:
   zip-filename: 
     description: 'Output zip file name uploaded'
     value: ${{ steps.zip.outputs.name }}
+  branch:
+    description: 'Clean branch name'
+    value: ${{ steps.extract_branch.outputs.CLEAN_BRANCH }}
 
 runs:
   using: 'composite'
