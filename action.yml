@@ -192,18 +192,16 @@ runs:
         path: .\aws
 
     - name: Update install script with branch name
-      if: ${{ inputs.custom_access_token != '' }}
       id: aws-work
       run: |
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
         $branch = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"
+        $aws_token = "${{ inputs.custom_access_token }}"
         $work_dir = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\$deploy_folder\deploy"
         
-        echo "Update install script with branch name"
-
         mkdir $work_dir\wwwroot
-        if ( $branch -ne "master" ) {
-          echo "Update dev_folder_name value on install script"
+        if ( $branch -ne "master" -And $aws_token -ne '') {
+          echo "Update dev_folder_name value on install script with branch name"
           (Get-Content $work_dir\install_script.ps1).Replace('dev_folder_name = "master"', 'dev_folder_name = "${{ steps.extract_branch.outputs.CLEAN_BRANCH }}"') | Set-Content $work_dir\install_script.ps1    
         }
         
@@ -211,7 +209,6 @@ runs:
       shell: powershell
 
     - name: Copy Compiled Folder(s)
-      if: ${{ inputs.custom_access_token != '' }}
       run: |
         $source = "${{ steps.monolith.outputs.source }}"
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
@@ -245,18 +242,9 @@ runs:
         $filename = "${{ steps.filename.outputs.name }}"
         $s3_bucket = "${{ inputs.s3_bucket }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
-        $aws_token = "${{ inputs.custom_access_token }}"
-        $root = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\"
-
-        if ( $aws_token -ne '' ) {
-          $path = $root + "aws\deploy\$deploy_folder"
-        } 
-        else {  
-          $path = $root + "artifacts\PublishedWebsites"
-        }
         
         $compress = @{
-          Path = "$path\*"
+          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\$deploy_folder\*"
           CompressionLevel = "Fastest"
           DestinationPath = "C:\artifacts\work.zip"
         }
