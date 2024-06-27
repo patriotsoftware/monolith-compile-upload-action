@@ -20,8 +20,9 @@ inputs:
     required: false
     default: true
   custom_access_token:
-    description: 'AWS Custom GitHub Access Token'
-    required: true
+    description: 'AWS Custom GitHub Access Token'    
+    required: false
+    default: ''
   aws_access_key:
     description: 'AWS Access Key (Required if no aws-actions/configure-aws-credentials)'
     required: true
@@ -183,6 +184,7 @@ runs:
       run: .\build2.bat transform_all_configs
 
     - name: AwsDeploy Code
+      if: ${{ inputs.custom_access_token != '' }}
       uses: actions/checkout@v4      
       with:
         repository: SynergyDataSystems/PatriotSoftware.AwsDeploy
@@ -190,6 +192,7 @@ runs:
         path: .\aws
 
     - name: Update install script with branch name
+      if: ${{ inputs.custom_access_token != '' }}
       id: aws-work
       run: |
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
@@ -208,6 +211,7 @@ runs:
       shell: powershell
 
     - name: Copy Compiled Folder(s)
+      if: ${{ inputs.custom_access_token != '' }}
       run: |
         $source = "${{ steps.monolith.outputs.source }}"
         $compiled_folder = "${{ steps.app.outputs.compiled_folder }}"
@@ -241,9 +245,18 @@ runs:
         $filename = "${{ steps.filename.outputs.name }}"
         $s3_bucket = "${{ inputs.s3_bucket }}"
         $deploy_folder = "${{ steps.app.outputs.deploy_folder }}"
+        $aws_token = "${{ inputs.custom_access_token }}"
+        $root = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\"
+
+        if ( $aws_token -ne '' ) {
+          $path = $root + "aws\deploy\$deploy_folder"
+        } 
+        else {  
+          $path = $root + "artifacts\PublishedWebsites"
+        }
         
         $compress = @{
-          Path = "C:\actions-runner\_work\PatriotSoftware\PatriotSoftware\aws\deploy\$deploy_folder\*"
+          Path = "$path\*"
           CompressionLevel = "Fastest"
           DestinationPath = "C:\artifacts\work.zip"
         }
